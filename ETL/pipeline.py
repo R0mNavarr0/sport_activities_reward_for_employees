@@ -5,8 +5,9 @@ STEPS = [
     ("Extraction et transformation des données", ["python", "./ETL/etl_data_ingestion.py"]),
     ("Calcul distance", ["python", "./ETL/distance_calcul.py"]),
     ("Validation des primes", ["python", "./ETL/prime_validation.py"]),
-    ("Ingestion dans PostGre", ["python", "./ETL/ingest_to_postgre.py"]),
+    ("Ingestion dans PostGres", ["python", "./ETL/ingest_to_postgre.py"]),
     ("Génération activités Strava-like", ["python", "./ETL/generate_strava_activities.py"]),
+    ("Ingestion activités Strava-like dans PostGres", ["python", "./ETL/ingest_strava_activities.py"])
 ]
 
 def run_step(name, cmd):

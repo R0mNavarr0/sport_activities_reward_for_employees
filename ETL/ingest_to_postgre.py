@@ -52,7 +52,7 @@ def ingest_rh(engine):
         TABLE_RH,
         engine,
         schema='public',
-        if_exists="replace",
+        if_exists="append",
         index=False,
         method="multi")
     
@@ -76,7 +76,7 @@ def ingest_sport(engine):
         TABLE_SPORT, 
         engine, 
         schema='public',
-        if_exists="replace", 
+        if_exists="append", 
         index=False, 
         method="multi")
     print(f"Ingestion sport terminée : {len(df_sport)} lignes insérées dans {TABLE_SPORT}.")
