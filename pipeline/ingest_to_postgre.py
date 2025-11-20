@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
-DB_HOST = "localhost"
+DB_HOST = "postgres"
 DB_PORT = "5432"
 DB_NAME = "rh_sport"
 
@@ -40,9 +40,6 @@ def ingest_rh(engine):
         df_rh["date_embauche"] = pd.to_datetime(df_rh["date_embauche"], errors="coerce").dt.date
     if 'code_postal' in df_rh.columns:
         df_rh['code_postal'] = df_rh['code_postal'].astype(str).str[:5]
-    # Conversion du booléen prime_validation si nécessaire
-    if "prime_validation" in df_rh.columns:
-        df_rh["prime_validation"] = df_rh["prime_validation"].astype(bool)
 
     print("Aperçu des données RH :")
     print(df_rh.head())

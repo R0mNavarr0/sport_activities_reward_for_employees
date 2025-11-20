@@ -12,7 +12,7 @@ JSONL_FILE = "./data/output/simulated_strava_activities.jsonl"
 
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
-DB_HOST = "localhost"
+DB_HOST = "postgres"
 DB_PORT = "5432"
 DB_NAME = "rh_sport"
 

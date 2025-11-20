@@ -12,7 +12,7 @@ from psycopg2.extras import RealDictCursor
 
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
-DB_HOST = "localhost"
+DB_HOST = "postgres"
 DB_PORT = "5432"
 DB_NAME = "rh_sport"
 

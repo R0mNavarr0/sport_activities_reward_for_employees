@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS public.strava_activities CASCADE;
+DROP TABLE IF EXISTS strava_activities CASCADE;
 
-CREATE TABLE public.strava_activities (
+CREATE TABLE strava_activities (
     activity_id         bigint PRIMARY KEY,            
     employee_id         integer REFERENCES rh_employees(id),
     name                text,

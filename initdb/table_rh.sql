@@ -23,6 +23,5 @@ CREATE TABLE rh_employees (
     moyen_deplacement text,         
     distance_domicile_travail integer,       
     duree_domicile_travail integer,
-    prime_validation boolean,
     created_at timestamp default now()
 );

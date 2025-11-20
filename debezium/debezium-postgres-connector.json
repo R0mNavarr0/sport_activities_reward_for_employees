@@ -1,0 +1,26 @@
+{
+  "name": "postgres-rh-sport-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "rh_sport",
+    "database.server.name": "rh_sport_server",
+
+    "schema.include.list": "public",
+    "table.include.list": "public.rh_employees,public.sport_activities,public.strava_activities",
+
+    "plugin.name": "pgoutput",
+
+    "topic.prefix": "rh_sport",
+    "tombstones.on.delete": "false",
+
+    "slot.name": "debezium_rh_sport",
+
+    "snapshot.mode": "initial"
+  }
+}

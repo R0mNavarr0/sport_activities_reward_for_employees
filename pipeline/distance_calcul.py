@@ -11,7 +11,7 @@ if API_KEY is None:
     raise ValueError("La variable d'environnement GOOGLE_MAPS_API_KEY n'est pas définie.")
 
 INPUT_RH = "./data/staging/data_rh_transformed.csv"
-OUTPUT_RH = "./data/staging/data_rh_with_distance.csv"
+OUTPUT_RH = "./data/output/data_rh_rdy.csv"
 
 gmaps = googlemaps.Client(key=API_KEY)
 

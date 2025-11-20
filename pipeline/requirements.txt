@@ -1,0 +1,9 @@
+pandas
+googlemaps
+sqlalchemy
+psycopg2-binary
+dotenv
+delta-spark
+pyspark
+requests
+confluent-kafka
