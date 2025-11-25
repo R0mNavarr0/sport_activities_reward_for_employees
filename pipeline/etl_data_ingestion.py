@@ -12,16 +12,11 @@ df_rh = pd.read_csv(INPUT_RH)
 df_sport = pd.read_csv(INPUT_SPORT)
 
 def split_adresse(serie: pd.Series) -> pd.DataFrame:
-    """
-    Prend une série de chaînes d'adresses et renvoie
-    un DataFrame avec adresse, code_postal, ville.
-    """
     adresses = []
     codes_postaux = []
     villes = []
 
     for val in serie.fillna(""):
-        # Découper avant et après la virgule
         if "," in val:
             adr, reste = val.split(",", 1)
             adr = adr.strip()
@@ -30,11 +25,9 @@ def split_adresse(serie: pd.Series) -> pd.DataFrame:
             adr = val.strip()
             reste = ""
 
-        # Extraire le code postal (premier bloc de 5 chiffres)
         match_cp = re.search(r"\b\d{5}\b", reste)
         if match_cp:
             cp = match_cp.group(0)
-            # Ville = le reste après le CP
             ville = reste.replace(cp, "").strip()
         else:
             cp = None

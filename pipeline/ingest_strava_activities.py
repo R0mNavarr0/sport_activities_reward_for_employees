@@ -4,10 +4,6 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import create_engine
 
-# ==============================
-# Paramètres
-# ==============================
-
 JSONL_FILE = "./data/output/simulated_strava_activities.jsonl"
 
 DB_USER = "postgres"
@@ -40,10 +36,6 @@ def load_jsonl(path: str):
 
 
 def flatten_activities(records):
-    """
-    Transforme la liste de JSON Strava-like en liste de dicts à plat
-    pour correspondre aux colonnes de la table strava_activities.
-    """
     flat = []
     for rec in records:
         activity_id = rec.get("id")
@@ -82,7 +74,6 @@ def main():
     flat_records = flatten_activities(records)
     df = pd.DataFrame(flat_records)
 
-    # Conversion des dates
     df["start_date_utc"] = pd.to_datetime(df["start_date_utc"], errors="coerce", utc=True)
     df["start_date_local"] = pd.to_datetime(df["start_date_local"], errors="coerce")
 

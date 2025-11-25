@@ -95,7 +95,12 @@ services:
     image: curlimages/curl:8.8.0
     container_name: debezium-init
     depends_on:
-      - debezium
+      debezium:
+        condition: service_started
+      redpanda:
+        condition: service_started
+      pipeline:
+        condition: service_completed_successfully
     volumes:
       - ./debezium:/init
     command: >
@@ -113,6 +118,49 @@ services:
         | grep -qE "200|201" && echo "Connecteur créé." || echo "Connecteur déjà présent ou erreur bénigne.";
       echo "Fin de debezium-init.";
       '
+
+  stream_cdc:
+    build:
+      context: .
+      dockerfile: ./pipeline/Dockerfile
+    container_name: strava-cdc-stream
+    env_file:
+    - .env
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+      debezium:
+        condition: service_started
+      redpanda:
+        condition: service_started
+      debezium-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
+    command: ["python", "-u", "pipeline/stream_strava_cdc_to_delta.py"]
+  
+  slack_notifier:
+    build:
+      context: .
+      dockerfile: ./pipeline/Dockerfile
+    container_name: slack-notifier
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_started
+      debezium-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: "rh_sport"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    command: ["python", "-u", "pipeline/slack_new_activity_notifier.py"]
 
 volumes:
   postgres_data:

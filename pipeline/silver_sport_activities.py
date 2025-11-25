@@ -1,16 +1,10 @@
 from delta import configure_spark_with_delta_pip
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+from silver_transforms import transform_sport_bronze_to_silver
 
-# ===========================
-# Config chemins Delta
-# ===========================
-BRONZE_BASE = "./data/delta/bronze"
-SILVER_BASE = "./data/delta/silver"
+BRONZE_PATH = "./data/delta/bronze/sport_activities"
+SILVER_PATH = "./data/delta/silver/dim_sport_profile"
 
-# ===========================
-# SparkSession avec Delta
-# ===========================
 builder = (
     SparkSession.builder.appName("Silver_RH")
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
@@ -20,29 +14,18 @@ builder = (
 
 spark = configure_spark_with_delta_pip(builder).getOrCreate()
 
-bronze_sport_path = f"{BRONZE_BASE}/sport_activities"
-df_sport = spark.read.format("delta").load(bronze_sport_path)
+df_sport = spark.read.format("delta").load(BRONZE_PATH)
 
 df_sport.printSchema()
 df_sport.show(5, truncate=False)
 
-df_dim_sport_profile = (
-    df_sport
-    .select(
-        F.col("id").alias("employee_id"),
-        "pratique_sport",
-    )
-)
+df_dim_sport_profile = transform_sport_bronze_to_silver(df_sport)
 
-silver_dim_sport_profile_path = f"{SILVER_BASE}/dim_sport_profile"
-
-df_dim_sport_profile.write.format("delta").mode("overwrite").save(silver_dim_sport_profile_path)
+df_dim_sport_profile.write.format("delta").mode("overwrite").save(SILVER_PATH)
 
 print("\n=== Écrit : silver.dim_sport_profile ===")
 df_dim_sport_profile.show(5, truncate=False)
 
-# ===========================
 # Fin
-# ===========================
 spark.stop()
 print("\n=== Silver RH terminé ===")

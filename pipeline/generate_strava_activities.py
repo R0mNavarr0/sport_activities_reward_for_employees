@@ -6,29 +6,20 @@ from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-# ==========================
-# Paramètres généraux
-# ==========================
-
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
 DB_HOST = "postgres"
 DB_PORT = "5432"
 DB_NAME = "rh_sport"
 
-# Nombre moyen d'activités par employé pratiquant un sport
 MIN_ACTIVITIES_PER_EMP = 2
 MAX_ACTIVITIES_PER_EMP = 25
 
-# Période de simulation : derniers 12 mois
 MONTHS_BACK = 12
 
-# Fichier de sortie (JSONL : 1 activité par ligne)
 OUTPUT_FILE = "./data/output/simulated_strava_activities.jsonl"
 
-# ==========================
 # Connexion PostgreSQL
-# ==========================
 
 def get_connection():
     return psycopg2.connect(
@@ -39,18 +30,9 @@ def get_connection():
         port=DB_PORT,
     )
 
-# ==========================
 # Récupération des employés sportifs
-# ==========================
 
 def get_sporting_employees(conn):
-    """
-    Récupère les employés avec leur pratique_sport (non NULL).
-    On suppose :
-      - rh_employees(id, nom, prenom, ...)
-      - sport_activities(id, pratique_sport)
-    et un lien 1-1 par id.
-    """
     query =  """
         SELECT
             e.id AS employee_id,
@@ -67,21 +49,10 @@ def get_sporting_employees(conn):
         rows = cur.fetchall()
     return rows
 
-# ==========================
-# Utilitaires de simulation
-# ==========================
-
-
-# ==========================
 # Mapping pratique_sport -> paramètres de simulation Strava
-# ==========================
 
-# Pour chaque sport déclaré, on définit :
-# - type / sport_type Strava
-# - un range de distance (mètres)
-# - un range de durée (secondes)
 SPORT_CONFIG = {
-    "Runing": {  # orthographe telle que dans ta colonne
+    "Runing": { 
         "type": "Run",
         "sport_type": "Run",
         "dist_min": 3000,
@@ -101,7 +72,7 @@ SPORT_CONFIG = {
         "type": "Workout",
         "sport_type": "Triathlon",
         "dist_min": 10000,
-        "dist_max": 80000,   # distance totale en "équivalent vélo"
+        "dist_max": 80000, 
         "time_min": 60 * 60,
         "time_max": 5 * 3600,
     },
@@ -187,7 +158,7 @@ SPORT_CONFIG = {
     },
     "Équitation": {
         "type": "Ride",
-        "sport_type": "EBikeRide",  # approximation pour un POC
+        "sport_type": "EBikeRide",
         "dist_min": 2000,
         "dist_max": 20000,
         "time_min": 30 * 60,
@@ -204,7 +175,6 @@ SPORT_CONFIG = {
 }
 
 def random_past_datetime(months_back=12):
-    """Retourne un datetime aléatoire dans les X derniers mois."""
     now = datetime.now()
     max_days = months_back * 30
     delta_days = random.randint(0, max_days)
@@ -212,12 +182,8 @@ def random_past_datetime(months_back=12):
     return now - timedelta(days=delta_days, seconds=delta_seconds)
 
 def simulate_activity(employee_id: int, pratique_sport: str):
-    """
-    Génère UNE activité Strava-like en utilisant la pratique_sport déclarée.
-    """
     config = SPORT_CONFIG.get(pratique_sport)
 
-    # Si sport non mappé (cas improbable ici) -> fallback générique
     if config is None:
         config = {
             "type": "Workout",
@@ -229,7 +195,7 @@ def simulate_activity(employee_id: int, pratique_sport: str):
         }
 
     start_dt_utc = random_past_datetime(MONTHS_BACK)
-    utc_offset = 3600  # ~ Europe/Paris
+    utc_offset = 3600 
     start_dt_local = start_dt_utc + timedelta(seconds=utc_offset)
 
     distance = random.randint(config["dist_min"], config["dist_max"]) if config["dist_max"] > 0 else 0
@@ -294,9 +260,7 @@ def simulate_activity(employee_id: int, pratique_sport: str):
 
     return activity
 
-# ==========================
 # Génération pour tous les employés sportifs
-# ==========================
 
 def generate_activities_for_all():
     conn = get_connection()
@@ -325,10 +289,6 @@ def generate_activities_for_all():
 
     finally:
         conn.close()
-
-# ==========================
-# Main
-# ==========================
 
 if __name__ == "__main__":
     generate_activities_for_all()

@@ -1,7 +1,6 @@
 from delta import configure_spark_with_delta_pip
 from pyspark.sql import SparkSession
 
-# Paramètres Postgres
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
 DB_HOST = "postgres"
@@ -21,7 +20,6 @@ connection_properties = {
     "driver": "org.postgresql.Driver",
 }
 
-# 1. SparkSession Delta
 builder = (
     SparkSession.builder.appName("BronzeFromPostgres")
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
