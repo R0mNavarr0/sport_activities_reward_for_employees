@@ -49,7 +49,10 @@ for delta_name, dbtable in TABLES.items():
     bronze_path = f"./data/delta/bronze/{delta_name}"
 
     print(f"=== Écriture Delta Bronze : {bronze_path} ===")
-    df.write.format("delta").mode("overwrite").save(bronze_path)
+    df.write.format("delta") \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .save(bronze_path)
 
 spark.stop()
 

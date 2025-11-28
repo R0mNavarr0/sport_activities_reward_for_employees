@@ -7,7 +7,7 @@ CREATE TABLE rh_employees (
     date_naissance date,
     date_embauche date,
     business_unit text,
-    salaire_brut numeric(10,2),
+    salaire_brut DOUBLE PRECISION,
     contrat text,
     nb_conges_payes smallint,
     adresse_complete text,

@@ -16,6 +16,9 @@ builder = (
 
 spark = configure_spark_with_delta_pip(builder).getOrCreate()
 
+print("Création de la database 'gold'...")
+spark.sql("CREATE DATABASE IF NOT EXISTS gold")
+
 # GOLD – prime_sportive_eligibility
 
 # Lecture Silver
@@ -59,7 +62,11 @@ df_gold_prime_input = (
 
 gold_prime_path = f"{GOLD_BASE}/prime_sportive_input"
 
-df_gold_prime_input.write.format("delta").mode("overwrite").save(gold_prime_path)
+df_gold_prime_input.write \
+    .format("delta") \
+    .mode("overwrite") \
+    .option("path", gold_prime_path) \
+    .saveAsTable("gold.prime_sportive_input")
 
 print("\n=== GOLD : prime_sportive_input ===")
 df_gold_prime_input.show(10, truncate=False)
@@ -87,7 +94,11 @@ df_gold_wellbeing = (
 
 gold_wellbeing_path = f"{GOLD_BASE}/wellbeing_days_eligibility"
 
-df_gold_wellbeing.write.format("delta").mode("overwrite").save(gold_wellbeing_path)
+df_gold_wellbeing.write \
+    .format("delta") \
+    .mode("overwrite") \
+    .option("path", gold_wellbeing_path) \
+    .saveAsTable("gold.wellbeing_days_eligibility")
 
 print("\n=== GOLD : wellbeing_days_eligibility ===")
 df_gold_wellbeing.show(10, truncate=False)
