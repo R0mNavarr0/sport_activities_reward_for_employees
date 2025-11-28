@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 from silver_transforms import transform_sport_bronze_to_silver
 
 BRONZE_PATH = "./data/delta/bronze/sport_activities"
-SILVER_PATH = "./data/delta/silver/dim_sport_profile"
+SILVER_PATH = "./data/delta/silver/silver.sport_profile"
 
 builder = (
     SparkSession.builder.appName("Silver_RH")
@@ -23,9 +23,8 @@ df_dim_sport_profile = transform_sport_bronze_to_silver(df_sport)
 
 df_dim_sport_profile.write.format("delta").mode("overwrite").save(SILVER_PATH)
 
-print("\n=== Écrit : silver.dim_sport_profile ===")
+print("\n=== Écrit : silver.sport_profile ===")
 df_dim_sport_profile.show(5, truncate=False)
 
-# Fin
 spark.stop()
 print("\n=== Silver RH terminé ===")

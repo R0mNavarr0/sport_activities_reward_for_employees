@@ -19,8 +19,8 @@ spark = configure_spark_with_delta_pip(builder).getOrCreate()
 # GOLD – prime_sportive_eligibility
 
 # Lecture Silver
-dim_employee_path = f"{SILVER_BASE}/dim_employee"
-dim_commute_path = f"{SILVER_BASE}/dim_commute"
+dim_employee_path = f"{SILVER_BASE}/silver.employee"
+dim_commute_path = f"{SILVER_BASE}/silver.commute"
 
 df_emp = spark.read.format("delta").load(dim_employee_path)
 df_commute = spark.read.format("delta").load(dim_commute_path)
@@ -35,81 +35,52 @@ df_ec = (
     )
 )
 
-mode_norm = F.lower(F.trim(F.col("c.moyen_deplacement")))
-
-WALK_MAX = 15000  
-BIKE_MAX = 25000
-
-distance = F.col("c.distance_domicile_travail_m")
-
-condition_walk = (
-    (mode_norm.like("%marche%")) | (mode_norm.like("%run%"))
-) & (distance <= WALK_MAX)
-
-condition_bike = (
-    mode_norm.like("%vélo%") | mode_norm.like("%velo%") | mode_norm.like("%trot%") | mode_norm.like("%autres%")
-) & (distance <= BIKE_MAX)
-
-elig_prime = condition_walk | condition_bike
-
 current_year = F.year(F.current_date())
 
-df_gold_prime = (
+df_gold_prime_input = (
     df_ec
     .select(
         F.col("e.employee_id"),
         current_year.alias("year"),
+        F.col("e.business_unit"),
+        F.col("e.salaire_brut"),
         F.col("c.moyen_deplacement"),
         F.col("c.distance_domicile_travail_m"),
-        F.col("e.salaire_brut"),
-    )
-    .withColumn("elig_prime_sportive", elig_prime)
-    .withColumn(
-        "montant_prime",
-        F.when(F.col("elig_prime_sportive"), F.col("salaire_brut") * F.lit(0.05))
-         .otherwise(F.lit(0.0))
     )
     .withColumn(
-        "elig_rule_description",
-        F.when(condition_walk, F.lit("Marche/Running et distance <= 15 km"))
-         .when(condition_bike, F.lit("Vélo/Trottinette/Autres et distance <= 25 km"))
-         .otherwise(F.lit("Conditions non remplies"))
+        "mode_normalise",
+        F.lower(F.trim(F.col("moyen_deplacement")))
+    )
+    .withColumn(
+        "distance_km",
+        (F.col("distance_domicile_travail_m") / 1000.0).cast("double")
     )
 )
 
-gold_prime_path = f"{GOLD_BASE}/prime_sportive_eligibility"
+gold_prime_path = f"{GOLD_BASE}/prime_sportive_input"
 
-df_gold_prime.write.format("delta").mode("overwrite").save(gold_prime_path)
+df_gold_prime_input.write.format("delta").mode("overwrite").save(gold_prime_path)
 
-print("\n=== GOLD : prime_sportive_eligibility ===")
-df_gold_prime.show(10, truncate=False)
+print("\n=== GOLD : prime_sportive_input ===")
+df_gold_prime_input.show(10, truncate=False)
 
 # GOLD – wellbeing_days_eligibility (5 journées bien-être)
 # Règle : >= 15 activités physiques dans l'année
 
-fact_activity_path = f"{SILVER_BASE}/fact_activity"
+fact_activity_path = f"{SILVER_BASE}/silver.activity"
 df_act = spark.read.format("delta").load(fact_activity_path)
 
 # Filtre sur l'année courante
 df_act_year = df_act.filter(F.col("activity_year") == current_year)
 
 # Agrégation par salarié + année
-df_agg = (
+df_gold_wellbeing = (
     df_act_year
     .groupBy("employee_id", "activity_year")
     .agg(
         F.count("*").alias("nb_activities_year"),
         F.min("activity_date").alias("first_activity_date"),
         F.max("activity_date").alias("last_activity_date"),
-    )
-)
-
-# Règle d'éligibilité : >= 15 activités
-df_gold_wellbeing = (
-    df_agg
-    .withColumn(
-        "elig_5_jours_bien_etre",
-        F.col("nb_activities_year") >= F.lit(15)
     )
     .withColumnRenamed("activity_year", "year")
 )
@@ -121,25 +92,5 @@ df_gold_wellbeing.write.format("delta").mode("overwrite").save(gold_wellbeing_pa
 print("\n=== GOLD : wellbeing_days_eligibility ===")
 df_gold_wellbeing.show(10, truncate=False)
 
-# GOLD – hr_costs_summary par BU
-
-df_gold_hr = (
-    df_gold_prime.alias("p")
-    .join(df_emp.alias("e"), on="employee_id", how="left")
-    .groupBy("year", "business_unit")
-    .agg(
-        F.countDistinct("employee_id").alias("nb_salaries"),
-        F.sum(F.when(F.col("elig_prime_sportive"), F.lit(1)).otherwise(F.lit(0))).alias("nb_eligibles_prime"),
-        F.sum("montant_prime").alias("cout_total_primes"),
-    )
-)
-
-gold_hr_path = f"{GOLD_BASE}/hr_costs_summary"
-df_gold_hr.write.format("delta").mode("overwrite").save(gold_hr_path)
-
-print("\n=== GOLD : hr_costs_summary ===")
-df_gold_hr.show(10, truncate=False)
-
-# Fin
 spark.stop()
 print("\n=== Construction couche GOLD terminée ===")

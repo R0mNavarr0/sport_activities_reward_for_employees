@@ -42,6 +42,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     command: ["python", "-u", "pipeline/pipeline.py"]
+    volumes:
+      - ./data:/app/data
 
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v23.3.12
@@ -161,6 +163,44 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
     command: ["python", "-u", "pipeline/slack_new_activity_notifier.py"]
+
+  distance-worker:
+    build:
+      context: .
+      dockerfile: ./pipeline/Dockerfile   # ou la même image que pipeline
+    container_name: distance-worker
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_started
+    environment:
+      PYTHONUNBUFFERED: "1"
+      GOOGLE_MAPS_API_KEY: "${API_KEY_MAPS}"
+      KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: "rh_sport"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    command: ["python", "-u", "pipeline/distance_worker.py"]
+
+  spark-thrift:
+    build:
+      context: .
+      dockerfile: ./spark/Dockerfile
+    container_name: spark-thrift
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+    volumes:
+      - ./data/delta:/data/delta
+    ports:
+      - "10000:10000"
+
+
 
 volumes:
   postgres_data:

@@ -5,58 +5,11 @@ import re
 INPUT_RH = "./data/input/data_rh.csv"
 INPUT_SPORT = "./data/input/data_sport.csv"
 
-OUTPUT_RH = "./data/staging/data_rh_transformed.csv"
+OUTPUT_RH = "./data/output/data_rh_rdy.csv"
 OUTPUT_SPORT = "./data/output/data_sport_rdy.csv"
 
 df_rh = pd.read_csv(INPUT_RH)
 df_sport = pd.read_csv(INPUT_SPORT)
-
-def split_adresse(serie: pd.Series) -> pd.DataFrame:
-    adresses = []
-    codes_postaux = []
-    villes = []
-
-    for val in serie.fillna(""):
-        if "," in val:
-            adr, reste = val.split(",", 1)
-            adr = adr.strip()
-            reste = reste.strip()
-        else:
-            adr = val.strip()
-            reste = ""
-
-        match_cp = re.search(r"\b\d{5}\b", reste)
-        if match_cp:
-            cp = match_cp.group(0)
-            ville = reste.replace(cp, "").strip()
-        else:
-            cp = None
-            ville = reste.strip()
-
-        adresses.append(adr)
-        codes_postaux.append(cp)
-        villes.append(ville)
-
-    return pd.DataFrame({
-        "adresse": adresses,
-        "code_postal": codes_postaux,
-        "ville": villes
-    })
-
-def extraire_jour_mois_annee(serie_dates: pd.Series) -> pd.DataFrame:
-    return pd.DataFrame({
-        "jour_naissance": serie_dates.dt.day,
-        "mois_naissance": serie_dates.dt.month,
-        "annee_naissance": serie_dates.dt.year
-    })
-
-df_rh['Date de naissance'] = pd.to_datetime(df_rh['Date de naissance'], format='%d/%m/%Y', errors='coerce')
-df_rh[["jour_naissance", "mois_naissance", "annee_naissance"]] = extraire_jour_mois_annee(df_rh["Date de naissance"])
-
-df_rh['Date d\'embauche'] = pd.to_datetime(df_rh['Date d\'embauche'], format='%d/%m/%Y', errors='coerce')
-df_rh[["jour_embauche", "mois_embauche", "annee_embauche"]] = extraire_jour_mois_annee(df_rh["Date d\'embauche"])
-
-df_rh[["adresse", "code_postal", "ville"]] = split_adresse(df_rh['Adresse du domicile'])
 
 dict_col_rh = {
     "ID salarié":"id",

@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 from silver_transforms import transform_strava_act_bronze_to_silver
 
 BRONZE_PATH = "./data/delta/bronze/strava_activities"
-SILVER_PATH = "./data/delta/silver/fact_activity"
+SILVER_PATH = "./data/delta/silver/silver.activity"
 
 builder = (
     SparkSession.builder.appName("Silver_Activities")

@@ -29,8 +29,6 @@ def ingest_rh(engine):
         df_rh["date_naissance"] = pd.to_datetime(df_rh["date_naissance"], errors="coerce").dt.date
     if "date_embauche" in df_rh.columns:
         df_rh["date_embauche"] = pd.to_datetime(df_rh["date_embauche"], errors="coerce").dt.date
-    if 'code_postal' in df_rh.columns:
-        df_rh['code_postal'] = df_rh['code_postal'].astype(str).str[:5]
 
     print("Aperçu des données RH :")
     print(df_rh.head())

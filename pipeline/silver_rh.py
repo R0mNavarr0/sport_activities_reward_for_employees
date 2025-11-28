@@ -7,8 +7,8 @@ from silver_transforms import (
 )
 
 BRONZE_PATH = "./data/delta/bronze/rh_employees"
-SILVER_EMP_PATH = "./data/delta/silver/dim_employee"
-SILVER_COM_PATH = "./data/delta/silver/dim_commute"
+SILVER_EMP_PATH = "./data/delta/silver/silver.employee"
+SILVER_COM_PATH = "./data/delta/silver/silver.commute"
 
 builder = (
     SparkSession.builder.appName("Silver_RH")

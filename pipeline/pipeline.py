@@ -3,15 +3,16 @@ import sys
 
 STEPS = [
     ("Extraction et transformation des données", ["python", "./pipeline/etl_data_ingestion.py"]),
-    ("Calcul distance", ["python", "./pipeline/distance_calcul.py"]),
     ("Ingestion dans PostGres", ["python", "./pipeline/ingest_to_postgre.py"]),
     ("Génération activités Strava-like", ["python", "./pipeline/generate_strava_activities.py"]),
     ("Ingestion activités Strava-like dans PostGres", ["python", "./pipeline/ingest_strava_activities.py"]),
     ("Constitution Delta Bronze Layer", ["python", "./pipeline/bronze_from_postgres.py"]),
-    ("Constitution Delta Silver layer (1/3)", ["python", "./pipeline/silver_rh.py"]),
-    ("Constitution Delta Silver layer (2/3)", ["python", "./pipeline/silver_sport_activities.py"]),
-    ("Constitution Delta Silver layer (3/3)", ["python", "./pipeline/silver_strava_activities.py"]),
-    ("Constitution Delta Gold layer", ["python", "./pipeline/gold_build.py"])
+    ("Constitution Silver RH", ["python", "./pipeline/silver_rh.py"]),
+    ("Génération demandes de distance (Kafka)",  ["python", "./pipeline/distance_build_requests.py"]),
+    ("Calcul des distances domicile-travail", ["python", "./pipeline/add_distance_silver_rh.py"]),
+    ("Constitution Silver Sport", ["python", "./pipeline/silver_sport_activities.py"]),
+    ("Constitution Silver Strava", ["python", "./pipeline/silver_strava_activities.py"]),
+    ("Constitution Gold Layer", ["python", "./pipeline/gold_build.py"])
 ]
 
 def run_step(name, cmd):
