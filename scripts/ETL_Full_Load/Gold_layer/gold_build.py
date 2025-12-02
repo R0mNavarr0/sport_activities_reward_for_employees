@@ -71,8 +71,7 @@ df_gold_prime_input.write \
 print("\n=== GOLD : prime_sportive_input ===")
 df_gold_prime_input.show(10, truncate=False)
 
-# GOLD – wellbeing_days_eligibility (5 journées bien-être)
-# Règle : >= 15 activités physiques dans l'année
+# GOLD – wellbeing_days_eligibility
 
 fact_activity_path = f"{SILVER_BASE}/silver.activity"
 df_act = spark.read.format("delta").load(fact_activity_path)

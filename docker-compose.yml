@@ -27,7 +27,7 @@ services:
   pipeline:
     build:
       context: .
-      dockerfile: ./pipeline/Dockerfile
+      dockerfile: ./scripts/Dockerfile
     container_name: pipeline-runner
     env_file:
       - .env
@@ -41,7 +41,7 @@ services:
       POSTGRES_DB: rh_sport
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    command: ["python", "-u", "pipeline/pipeline.py"]
+    command: ["python", "-u", "scripts/ETL_Full_Load/pipeline.py"]
     volumes:
       - ./data:/app/data
 
@@ -124,7 +124,7 @@ services:
   stream_cdc:
     build:
       context: .
-      dockerfile: ./pipeline/Dockerfile
+      dockerfile: ./scripts/Dockerfile
     container_name: strava-cdc-stream
     env_file:
     - .env
@@ -139,12 +139,12 @@ services:
         condition: service_completed_successfully
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
-    command: ["python", "-u", "pipeline/stream_strava_cdc_to_delta.py"]
+    command: ["python", "-u", "scripts/Jobs_Spark/stream_strava_cdc_to_delta.py"]
   
   slack_notifier:
     build:
       context: .
-      dockerfile: ./pipeline/Dockerfile
+      dockerfile: ./scripts/Dockerfile
     container_name: slack-notifier
     env_file:
       - .env
@@ -162,12 +162,12 @@ services:
       POSTGRES_DB: "rh_sport"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
-    command: ["python", "-u", "pipeline/slack_new_activity_notifier.py"]
+    command: ["python", "-u", "scripts/Jobs_Spark/slack_new_activity_notifier.py"]
 
   distance-worker:
     build:
       context: .
-      dockerfile: ./pipeline/Dockerfile   # ou la même image que pipeline
+      dockerfile: ./scripts/Dockerfile
     container_name: distance-worker
     env_file:
       - .env
@@ -185,7 +185,7 @@ services:
       POSTGRES_DB: "rh_sport"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
-    command: ["python", "-u", "pipeline/distance_worker.py"]
+    command: ["python", "-u", "scripts/Jobs_Spark/distance_worker.py"]
 
   spark-thrift:
     build:

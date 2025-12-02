@@ -9,13 +9,13 @@ ENV PATH="$JAVA_HOME/bin:${PATH}"
 
 WORKDIR /app
 
-COPY pipeline/requirements.txt /app/requirements.txt
+COPY scripts/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY jars /app/jars
 
-COPY pipeline /app/pipeline
+COPY scripts /app/scripts
 
 COPY data /app/data
 
-CMD ["python", "pipeline/pipeline.py"]
+CMD ["python", "scripts/ETL_Full_Load/pipeline.py"]

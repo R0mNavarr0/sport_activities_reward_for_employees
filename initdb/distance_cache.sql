@@ -7,7 +7,7 @@ CREATE TABLE distance_cache (
     distance_m      integer,
     duration_s      integer,
     provider        text NOT NULL DEFAULT 'google_maps',
-    status          text NOT NULL,  -- 'PENDING', 'OK', 'ERROR'
+    status          text NOT NULL,
     error_message   text,
     last_updated    timestamp without time zone DEFAULT now(),
     UNIQUE(origin_address, destination_address, provider)
