@@ -139,7 +139,7 @@ services:
         condition: service_completed_successfully
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
-    command: ["python", "-u", "scripts/Jobs_Spark/stream_strava_cdc_to_delta.py"]
+    command: ["python", "-u", "scripts/Jobs_Spark/continuous_integration_strava_activities.py"]
   
   slack_notifier:
     build:
