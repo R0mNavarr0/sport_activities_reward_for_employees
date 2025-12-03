@@ -116,19 +116,6 @@ docker-compose run --rm pipeline python scripts/Jobs_Spark/batch_refresh_silver_
 
 -----
 
-## Règles Métiers (Power BI)
-
-Les indicateurs suivants sont calculés dans la couche Gold :
-
-  * **Montant Prime Sportive** :
-      * *Condition* : Déplacement en "Marche/Running" (\<= 15km) OU "Vélo/Trottinette" (\<= 25km).
-      * *Calcul* : `Salaire Brut * 5%`.
-  * **Éligibilité Bien-Être** :
-      * *Condition* : Avoir réalisé \>= 15 activités dans l'année en cours.
-      * *Avantage* : 5 jours de congés.
-
------
-
 ## Structure du Projet
 
 ```bash
@@ -152,7 +139,7 @@ Les indicateurs suivants sont calculés dans la couche Gold :
 └── docker-compose.yml  # Orchestration globale
 ```
 
-## 🛠 Commandes de Maintenance
+## Commandes de Maintenance
 
   * **Vérifier les logs du streaming :** `docker logs -f stream-processor`
   * **Vérifier les données brutes via SQL :**
