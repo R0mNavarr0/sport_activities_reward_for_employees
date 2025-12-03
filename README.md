@@ -9,7 +9,7 @@ Ce projet est un **Proof of Concept (POC)** d'une infrastructure Data Engineerin
 L'objectif est de consolider des données RH (salariés) et des données d'activités sportives (type Strava) pour répondre à trois besoins métiers :
 
 1.  **Prime Sportive** : Calculer l'impact financier d'une prime de 5% du salaire brut pour les employés venant au travail en mobilité douce (sous condition de distance).
-2.  **ours Bien-Être** : Identifier les employés éligibles à 5 jours de congés supplémentaires (ceux ayant réalisé au moins 15 activités sportives dans l'année).
+2.  **Jours Bien-Être** : Identifier les employés éligibles à 5 jours de congés supplémentaires (ceux ayant réalisé au moins 15 activités sportives dans l'année).
 3.  **Engagement Salarié** : Notifier en temps réel sur Slack les nouvelles performances sportives.
 
 ### Architecture Médaillon (Bronze / Silver / Gold)
