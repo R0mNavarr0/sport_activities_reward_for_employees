@@ -193,7 +193,37 @@ services:
       - ./data/delta:/data/delta
     ports:
       - "10000:10000"
-      
+
+  thrift-init:
+    build:
+      context: .
+      dockerfile: ./spark/Dockerfile
+    container_name: thrift-init
+    depends_on:
+      spark-thrift:
+        condition: service_started
+      pipeline:
+        condition: service_completed_successfully
+    volumes:
+      - ./data:/data
+      - ./scripts:/scripts
+    entrypoint: /bin/bash
+    command:
+      - "-c"
+      - |
+        echo "[INIT] Attente de la création des fichiers Gold..."
+        while [ ! -d "/data/delta/gold/prime_sportive_input" ]; do
+          sleep 5
+        done
+        
+        echo "[INIT] Fichiers détectés. Attente du Spark Thrift Server (Port 10000)..."
+        until /opt/spark/bin/beeline -u "jdbc:hive2://spark-thrift:10000" -n admin -f /scripts/init_gold_views.sql; do
+          echo "⚠️ Serveur indisponible, nouvelle tentative dans 5s..."
+          sleep 5
+        done
+        
+        echo "[INIT] SUCCÈS : Tables et Vues Gold enregistrées dans Spark Thrift."
+
 
 volumes:
   postgres_data:
