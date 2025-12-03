@@ -17,14 +17,14 @@ spark = configure_spark_with_delta_pip(builder).getOrCreate()
 df_sport = spark.read.format("delta").load(BRONZE_PATH)
 
 df_sport.printSchema()
-df_sport.show(5, truncate=False)
+df_sport.show(10, truncate=False)
 
 df_dim_sport_profile = transform_sport_bronze_to_silver(df_sport)
 
 df_dim_sport_profile.write.format("delta").mode("overwrite").save(SILVER_PATH)
 
 print("\n=== Écrit : silver.sport_profile ===")
-df_dim_sport_profile.show(5, truncate=False)
+df_dim_sport_profile.show(10, truncate=False)
 
 spark.stop()
 print("\n=== Silver RH terminé ===")

@@ -26,9 +26,9 @@ def ingest_rh(engine):
     print("Colonnes du CSV RH :", list(df_rh.columns))    
 
     if "date_naissance" in df_rh.columns:
-        df_rh["date_naissance"] = pd.to_datetime(df_rh["date_naissance"], errors="coerce").dt.date
+        df_rh["date_naissance"] = pd.to_datetime(df_rh["date_naissance"], dayfirst=True, errors="coerce").dt.date
     if "date_embauche" in df_rh.columns:
-        df_rh["date_embauche"] = pd.to_datetime(df_rh["date_embauche"], errors="coerce").dt.date
+        df_rh["date_embauche"] = pd.to_datetime(df_rh["date_embauche"], dayfirst=True, errors="coerce").dt.date
 
     print("Aperçu des données RH :")
     print(df_rh.head())

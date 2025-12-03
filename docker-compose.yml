@@ -63,16 +63,6 @@ services:
       - "19092:19092"
     volumes:
       - redpanda_data:/var/lib/redpanda/data
-  
-  redpanda-console:
-    image: docker.redpanda.com/redpandadata/console:v2.6.0
-    container_name: redpanda-console
-    environment:
-      KAFKA_BROKERS: redpanda:9092
-    ports:
-      - "8080:8080"
-    depends_on:
-      - redpanda
 
   debezium:
     image: debezium/connect:2.7.3.Final
@@ -90,6 +80,7 @@ services:
       VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       KEY_CONVERTER_SCHEMAS_ENABLE: "false"
       VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      JAVA_OPTS: "-Xms256m -Xmx512m"
     ports:
       - "8083:8083"
 
@@ -121,71 +112,51 @@ services:
       echo "Fin de debezium-init.";
       '
 
-  stream_strava_activities:
+  stream_processor:
     build:
       context: .
       dockerfile: ./scripts/Dockerfile
-    container_name: stream-strava-activities
+    container_name: stream-processor
     env_file:
-    - .env
+      - .env
     depends_on:
       pipeline:
         condition: service_completed_successfully
-      debezium:
-        condition: service_started
       redpanda:
         condition: service_started
-      debezium-init:
-        condition: service_completed_successfully
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
-    command: ["python", "-u", "scripts/Jobs_Spark/continuous_integration_strava_activities.py"]
+      SPARK_DRIVER_MEMORY: "512m"
     volumes:
       - ./data:/app/data
+      - ./scripts:/app/scripts
+    command: ["python", "-u", "scripts/Jobs_Spark/continuous_master_stream.py"]
 
-  stream_rh_employees:
+  distance-worker:
     build:
       context: .
       dockerfile: ./scripts/Dockerfile
-    container_name: stream-rh-employees
+    container_name: distance-worker
     env_file:
-    - .env
+      - .env
     depends_on:
-      pipeline:
-        condition: service_completed_successfully
-      debezium:
-        condition: service_started
+      postgres:
+        condition: service_healthy
       redpanda:
         condition: service_started
-      debezium-init:
-        condition: service_completed_successfully
     environment:
+      PYTHONUNBUFFERED: "1"
+      GOOGLE_MAPS_API_KEY: "${API_KEY_MAPS}"
       KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
-    command: ["python", "-u", "scripts/Jobs_Spark/continuous_integration_rh_employees.py"]
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: "rh_sport"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
     volumes:
-      - ./data:/app/data
+      - ./scripts:/app/scripts
+    command: ["python", "-u", "scripts/Jobs_Spark/distance_worker.py"]
 
-  stream_sport_activities:
-    build:
-      context: .
-      dockerfile: ./scripts/Dockerfile
-    container_name: stream-sport-activities
-    env_file:
-    - .env
-    depends_on:
-      pipeline:
-        condition: service_completed_successfully
-      debezium:
-        condition: service_started
-      redpanda:
-        condition: service_started
-      debezium-init:
-        condition: service_completed_successfully
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
-    command: ["python", "-u", "scripts/Jobs_Spark/continuous_integration_sport_activities.py"]
-    volumes:
-      - ./data:/app/data
   
   slack_notifier:
     build:
@@ -210,31 +181,6 @@ services:
       POSTGRES_PASSWORD: "postgres"
     command: ["python", "-u", "scripts/Jobs_Spark/slack_new_activity_notifier.py"]
 
-  distance-worker:
-    build:
-      context: .
-      dockerfile: ./scripts/Dockerfile
-    container_name: distance-worker
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redpanda:
-        condition: service_started
-    environment:
-      PYTHONUNBUFFERED: "1"
-      GOOGLE_MAPS_API_KEY: "${API_KEY_MAPS}"
-      KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
-      POSTGRES_HOST: "postgres"
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: "rh_sport"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-    command: ["python", "-u", "scripts/Jobs_Spark/distance_worker.py"]
-    volumes:
-      - ./data:/app/data
-
   spark-thrift:
     build:
       context: .
@@ -247,8 +193,7 @@ services:
       - ./data/delta:/data/delta
     ports:
       - "10000:10000"
-
-
+      
 
 volumes:
   postgres_data:

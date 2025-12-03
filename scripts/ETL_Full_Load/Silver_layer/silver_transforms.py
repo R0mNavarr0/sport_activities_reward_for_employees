@@ -1,6 +1,15 @@
 from pyspark.sql import DataFrame, functions as F
 
 def transform_rh_bronze_to_silver_employee(df: DataFrame) -> DataFrame:
+    
+    # Conversion date_naissance (Int -> Date)
+    if "LongType" in str(df.schema["date_naissance"].dataType):
+        df_clean = df_clean.withColumn("date_naissance", F.expr("date_add('1970-01-01', date_naissance)"))
+    
+    # Conversion date_embauche (Int -> Date)
+    if "LongType" in str(df.schema["date_embauche"].dataType):
+        df_clean = df_clean.withColumn("date_embauche", F.expr("date_add('1970-01-01', date_embauche)"))
+    
     df_emp = (
         df
         # Décomposition dates de naissance
@@ -108,7 +117,24 @@ def transform_sport_bronze_to_silver(df: DataFrame) -> DataFrame:
     return df_sport
 
 def transform_strava_act_bronze_to_silver(df: DataFrame) -> DataFrame:
-    df_strava = df.select(
+    
+    df_clean = df
+    
+    # Pour start_date_utc
+    if "LongType" in str(df.schema["start_date_utc"].dataType):
+        df_clean = df_clean.withColumn(
+            "start_date_utc", 
+            (F.col("start_date_utc") / 1000000).cast("timestamp")
+        )
+    
+    if "LongType" in str(df.schema["start_date_local"].dataType):
+        df_clean = df_clean.withColumn(
+            "start_date_local", 
+            (F.col("start_date_local") / 1000000).cast("timestamp")
+        )
+
+    # 2. Sélection et Renommage
+    df_strava = df_clean.select(
         "activity_id",
         "employee_id",
         F.col("start_date_utc").alias("activity_datetime_utc"),
