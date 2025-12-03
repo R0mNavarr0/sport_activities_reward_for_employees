@@ -1,28 +1,19 @@
 import os
-
 from delta import configure_spark_with_delta_pip
 from delta.tables import DeltaTable
 from pyspark.sql import SparkSession, functions as F
 from pyspark.sql.types import (
-    StructType, StructField, StringType, IntegerType, BooleanType, LongType
+    StructType, StructField, StringType, IntegerType
 )
 
-# ==============================
-# Config
-# ==============================
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "redpanda:9092")
-TOPIC = "rh_sport.public.strava_activities"
-
-# Chemin de la table Delta Bronze strava_activities
-DELTA_BRONZE_STRAVA_PATH = "./data/delta/bronze/strava_activities"
-
-# ==============================
-# SparkSession + Delta + Kafka
-# ==============================
+TOPIC_SPORT = "rh_sport.public.sport_activities"
+BRONZE_SPORT_PATH = "./data/delta/bronze/sport_activities"
+CHECKPOINT_SPORT = "./data/delta/checkpoints/cdc_sport"
 
 builder = (
-    SparkSession.builder.appName("Continuous_Integration_Strava_activities")
+    SparkSession.builder.appName("Continuous_Integration_sport_activities_bronze")
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
     .config(
@@ -40,31 +31,9 @@ builder = (
 spark = configure_spark_with_delta_pip(builder).getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
 
-# ==============================
-# Schéma Debezium pour strava_activities
-# ==============================
-
-after_schema = StructType([
-    StructField("activity_id",        LongType(), True),
-    StructField("employee_id",        IntegerType(), True),
-    StructField("name",               StringType(),  True),
-    StructField("distance_m",         IntegerType(), True),
-    StructField("moving_time_s",      IntegerType(), True),
-    StructField("elapsed_time_s",     IntegerType(), True),
-    StructField("total_elev_gain_m",  IntegerType(), True),
-    StructField("type",               StringType(),  True),
-    StructField("sport_type",         StringType(),  True),
-    StructField("start_date_utc",     LongType(), True),
-    StructField("start_date_local",   LongType(), True),
-    StructField("timezone",           StringType(),  True),
-    StructField("utc_offset_s",       IntegerType(), True),
-    StructField("commute",            BooleanType(), True),
-    StructField("manual",             BooleanType(), True),
-    StructField("private",            BooleanType(), True),
-    StructField("flagged",            BooleanType(), True),
-    StructField("calories",           IntegerType(), True),
-    StructField("raw_payload",        StringType(),  True),
-    StructField("created_at",         LongType(), True)
+schema_sport = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("pratique_sport", StringType(), True)
 ])
 
 # ==============================
@@ -74,7 +43,7 @@ after_schema = StructType([
 raw_df = (
     spark.readStream.format("kafka")
     .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP)
-    .option("subscribe", TOPIC)
+    .option("subscribe", TOPIC_SPORT)
     .option("startingOffsets", "earliest")
     .option("failOnDataLoss","false")
     .load()
@@ -91,7 +60,7 @@ parsed_df = (
         F.get_json_object("json_str", "$.payload.op").alias("op"),
         F.from_json(
             F.get_json_object("json_str", "$.payload.after"), 
-            after_schema
+            schema_sport
         ).alias("after")
     )
     # On filtre pour ne garder que Création (c), Update (u) et Snapshot (r)
@@ -109,18 +78,18 @@ def apply_cdc_to_delta(micro_df, batch_id: int):
 
     print(f"--- Batch {batch_id} : {micro_df.count()} lignes reçues ---")
     
-    # Dédoublonnage sur la clé primaire (activity_id) dans le micro-batch
+    # Dédoublonnage sur la clé primaire (id) dans le micro-batch
     # On garde la dernière version reçue pour chaque ID
-    upserts_df = micro_df.dropDuplicates(["activity_id"])
+    upserts_df = micro_df.dropDuplicates(["id"])
 
     # 1. Cas Table Inexistante : Initialisation
-    if not DeltaTable.isDeltaTable(spark, DELTA_BRONZE_STRAVA_PATH):
-        print(f"⚠️ Table inexistante à {DELTA_BRONZE_STRAVA_PATH}. Création initiale...")
-        upserts_df.write.format("delta").mode("append").save(DELTA_BRONZE_STRAVA_PATH)
+    if not DeltaTable.isDeltaTable(spark, BRONZE_SPORT_PATH):
+        print(f"⚠️ Table inexistante à {BRONZE_SPORT_PATH}. Création initiale...")
+        upserts_df.write.format("delta").mode("append").save(BRONZE_SPORT_PATH)
         return
 
     # 2. Cas Normal : Merge (Upsert)
-    delta_table = DeltaTable.forPath(spark, DELTA_BRONZE_STRAVA_PATH)
+    delta_table = DeltaTable.forPath(spark, BRONZE_SPORT_PATH)
     
     update_columns = {col: f"s.{col}" for col in upserts_df.columns if col not in ["created_at", "op"]}
     insert_columns = {col: f"s.{col}" for col in upserts_df.columns if col not in ["op"]}
@@ -128,7 +97,7 @@ def apply_cdc_to_delta(micro_df, batch_id: int):
     (delta_table.alias("t")
         .merge(
             upserts_df.alias("s"),
-            "t.activity_id = s.activity_id"
+            "t.id = s.id"
         )
         .whenMatchedUpdate(set=update_columns)
         .whenNotMatchedInsert(values=insert_columns)
@@ -140,10 +109,10 @@ query = (
     parsed_df.writeStream
     .foreachBatch(apply_cdc_to_delta)
     .outputMode("update")
-    .option("checkpointLocation", "./data/delta/checkpoints/strava_cdc_to_bronze")
+    .option("checkpointLocation", CHECKPOINT_SPORT)
     .start()
 )
 
-print(f"Streaming Strava Activities démarré (Topic: {TOPIC})")
+print(f"Streaming Sport Activités démarré (Topic: {TOPIC_SPORT})")
 
 query.awaitTermination()

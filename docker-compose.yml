@@ -121,11 +121,11 @@ services:
       echo "Fin de debezium-init.";
       '
 
-  stream_cdc:
+  stream_strava_activities:
     build:
       context: .
       dockerfile: ./scripts/Dockerfile
-    container_name: strava-cdc-stream
+    container_name: stream-strava-activities
     env_file:
     - .env
     depends_on:
@@ -140,6 +140,52 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
     command: ["python", "-u", "scripts/Jobs_Spark/continuous_integration_strava_activities.py"]
+    volumes:
+      - ./data:/app/data
+
+  stream_rh_employees:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile
+    container_name: stream-rh-employees
+    env_file:
+    - .env
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+      debezium:
+        condition: service_started
+      redpanda:
+        condition: service_started
+      debezium-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
+    command: ["python", "-u", "scripts/Jobs_Spark/continuous_integration_rh_employees.py"]
+    volumes:
+      - ./data:/app/data
+
+  stream_sport_activities:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile
+    container_name: stream-sport-activities
+    env_file:
+    - .env
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+      debezium:
+        condition: service_started
+      redpanda:
+        condition: service_started
+      debezium-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "redpanda:9092"
+    command: ["python", "-u", "scripts/Jobs_Spark/continuous_integration_sport_activities.py"]
+    volumes:
+      - ./data:/app/data
   
   slack_notifier:
     build:
@@ -186,6 +232,8 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
     command: ["python", "-u", "scripts/Jobs_Spark/distance_worker.py"]
+    volumes:
+      - ./data:/app/data
 
   spark-thrift:
     build:

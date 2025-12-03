@@ -9,7 +9,7 @@ CREATE TABLE rh_employees (
     business_unit text,
     salaire_brut DOUBLE PRECISION,
     contrat text,
-    nb_conges_payes smallint,
+    nb_conges_payes integer,
     adresse_complete text,
     moyen_deplacement text
 );
