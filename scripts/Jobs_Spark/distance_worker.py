@@ -8,17 +8,17 @@ from confluent_kafka import Consumer, KafkaError
 
 load_dotenv()
 
-BOOTSTRAP_SERVERS = "redpanda:9092"
+BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 TOPIC = "distance_requests"
 GROUP_ID = "distance-worker"
 
 GOOGLE_API_KEY = os.getenv("API_KEY_MAPS")
 
-DB_HOST = "postgres"
-DB_PORT = 5432
-DB_NAME = "rh_sport"
-DB_USER = "postgres"
-DB_PASSWORD = "postgres"
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
 
 def compute_distance_duration(origin: str, destination: str) -> tuple[int | None, int | None, str | None]:
     url = "https://maps.googleapis.com/maps/api/distancematrix/json"

@@ -36,11 +36,11 @@ services:
         condition: service_healthy
     environment:
       PYTHONUNBUFFERED: "1"
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: rh_sport
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     command: ["python", "-u", "scripts/ETL_Full_Load/pipeline.py"]
     volumes:
       - ./data:/app/data

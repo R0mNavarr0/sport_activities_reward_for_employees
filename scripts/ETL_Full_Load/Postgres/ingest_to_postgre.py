@@ -3,12 +3,16 @@ import pandera as pa
 from pandera import Column, Check, DataFrameSchema
 from sqlalchemy import create_engine
 import sys
+import os
+from dotenv import load_dotenv
 
-DB_USER = "postgres"
-DB_PASSWORD = "postgres"
-DB_HOST = "postgres"
-DB_PORT = "5432"
-DB_NAME = "rh_sport"
+load_dotenv()
+
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
 
 CSV_RH = "./data/output/data_rh_rdy.csv"
 CSV_SPORT = "./data/output/data_sport_rdy.csv"
