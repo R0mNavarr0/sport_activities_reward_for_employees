@@ -3,7 +3,6 @@ import sys
 import time
 import os
 
-# Liste des scripts à exécuter
 STEPS = [
     ("1. Silver RH", ["python", "scripts/ETL_Full_Load/Silver_layer/silver_rh.py"]),
     ("2. Kafka Req Distance", ["python", "scripts/ETL_Full_Load/Silver_layer/distance_build_requests.py"]),
@@ -29,13 +28,10 @@ def run_pipeline():
             print(f" OK : {name}")
         except subprocess.CalledProcessError as e:
             print(f" ERREUR sur {name} (Code {e.returncode})")
-            # On ne quitte pas forcément le script global si c'est une boucle infinie, 
-            # mais pour un one-shot c'est mieux d'arrêter.
-            # sys.exit(1) 
 
 def main():
     mode = os.getenv("REFRESH_MODE", "ONE_SHOT")
-    interval = int(os.getenv("REFRESH_INTERVAL_SECONDS", "300")) # 5 minutes par défaut
+    interval = int(os.getenv("REFRESH_INTERVAL_SECONDS", "300"))
 
     if mode == "LOOP":
         print(f"Mode BOUCLE activé. Rafraîchissement toutes les {interval} secondes.")

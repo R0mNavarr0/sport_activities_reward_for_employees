@@ -7,3 +7,5 @@ delta-spark
 pyspark
 requests
 confluent-kafka
+pandera
+pyarrow
